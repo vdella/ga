@@ -11,7 +11,7 @@ class Chromosome:
 
     def __init__(self, gene):
         self.gene = gene
-        self.integer, self.fractional = gene.split('.')
+        self.integer, self.fractional = gene.split('.') if '.' in gene else (gene, '0')
 
     def __repr__(self):
         return self.gene

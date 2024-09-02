@@ -26,7 +26,7 @@ def to_bits_from(floating_point):
 
 
 def to_float_from(bits):
-    integer_part, fractional_part = bits.split('.')
+    integer_part, fractional_part = bits.split('.') if '.' in bits else (bits, '0')
 
     integer_part = int(integer_part, base=2)
     fractional_part = int(fractional_part, base=2) / 2 ** len(fractional_part)
@@ -35,11 +35,5 @@ def to_float_from(bits):
 
 
 if __name__ == '__main__':
-    # result = to_bits_from(3.14)
-    # print(to_float_from(result))
-
     result = to_bits_from(0.5)
     print(to_float_from(result))
-
-    # (print(bitwise('101.110', '111.101', '&')))
-    # (print(bitwise('101.110', '111.101', '|')))

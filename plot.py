@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from ga import find_fittest, average_fitness_for, generations
+from ga import find_fittest, average_fitness_for
 from population import x_min, x_max
 import numpy as np
 

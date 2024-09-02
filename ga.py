@@ -3,7 +3,7 @@ from population import *
 population_size = 20
 generations = 600
 
-mutation_probability = 0.05
+mutation_probability = 0.2
 crossover_probability = 0.8
 
 
@@ -12,21 +12,40 @@ def average_fitness_for(individuals: list) -> float:
 
 
 def crossover(father_chromosome: Chromosome, mother_chromosome: Chromosome):
-    mask = to_bits_from(np.random.random())
-    mask = Chromosome(mask)
+    # Randomly decide a crossover point within the gene string.
+    crossover_point = np.random.randint(1, len(father_chromosome.gene) - 1)
 
-    if np.random.uniform(0, 1) > crossover_probability:
-        return father_chromosome, mother_chromosome
+    # Combine the parents' genes at the crossover point.
+    son_gene = father_chromosome.gene[:crossover_point] + mother_chromosome.gene[crossover_point:]
+    daughter_gene = mother_chromosome.gene[:crossover_point] + father_chromosome.gene[crossover_point:]
 
-    son_chromosome = (father_chromosome & mask) | (mother_chromosome & ~mask)
-    daughter_chromosome = (father_chromosome & ~mask) | (mother_chromosome & mask)
+    # We might get '..' while crossing over, so we need to replace it with '.'.
+    son_gene = son_gene.replace('..', '.')
+    daughter_gene = daughter_gene.replace('..', '.')
+
+    print(son_gene, daughter_gene)
+
+    son_chromosome = Chromosome(son_gene)
+    daughter_chromosome = Chromosome(daughter_gene)
+
+    son_value = to_float_from(son_chromosome.gene)
+    daughter_value = to_float_from(daughter_chromosome.gene)
+
+    # Ensure the offspring values are within the valid range [x_min, x_max]
+    if not (x_min <= son_value <= x_max):
+        son_value = np.clip(son_value, x_min, x_max)
+        son_chromosome = Chromosome(to_bits_from(son_value))
+
+    if not (x_min <= daughter_value <= x_max):
+        daughter_value = np.clip(daughter_value, x_min, x_max)
+        daughter_chromosome = Chromosome(to_bits_from(daughter_value))
 
     return son_chromosome, daughter_chromosome
 
 
 def select(individuals) -> Individual:  # Rank selection
     # Sort individuals by fitness (ascending order)
-    sorted_individuals = sorted(individuals, key=lambda x: x.fitness)
+    sorted_individuals = sorted(individuals, key=lambda i: i.fitness)
 
     # Assign ranks: lowest fitness gets rank 1, highest gets rank N
     ranks = np.arange(1, len(sorted_individuals) + 1)
@@ -47,8 +66,6 @@ def mutate(chromosome: Chromosome) -> Chromosome:
     index = np.random.randint(0, len(chromosome.gene))
     integer, fractional = chromosome.gene.split('.')
 
-    # index = len(integer) - 1  # TEST CASE!
-
     if index < len(integer):
         integer = list(integer)
         integer[index] = '1' if integer[index] == '0' else '0'
@@ -59,7 +76,16 @@ def mutate(chromosome: Chromosome) -> Chromosome:
     integer = ''.join(integer)
     fractional = ''.join(fractional)
 
-    return Chromosome(integer + '.' + fractional)
+    genes = Chromosome(integer + '.' + fractional)
+    float_gene = to_float_from(genes.gene)
+
+    # Ensure the mutated value is within the valid range [x_min, x_max].
+    if not (x_min <= float_gene <= x_max):
+        son_value = np.clip(float_gene, x_min, x_max)
+        genes = Chromosome(to_bits_from(son_value))
+
+    return genes
+
 
 def find_fittest():
     uniform_population = uniform_population_by(population_size)
@@ -89,3 +115,13 @@ def find_fittest():
         parents = newborns.copy()
 
     return people
+
+
+if __name__ == '__main__':
+    all_people = find_fittest()
+
+    # for citizens in all_people:
+    #     print(f'Generation {citizens}:')
+    #     for individual in all_people[citizens]:
+    #         print(f'x: {individual.x}, fitness: {individual.fitness}')
+    #     print()
